@@ -11,11 +11,26 @@ option(${PROJECT_NAME}_USE_ALT_NAMES "Use alternative names for the project, suc
 option(${PROJECT_NAME}_WARNINGS_AS_ERRORS "Treat compiler warnings as errors." OFF)
 
 #
+# Unit testing
+#
+# Currently supporting: GoogleTest, Catch2.
+option(${PROJECT_NAME}_ENABLE_UNIT_TESTING "Enable unit tests for the projects (from the `test` subfolder)." ON)
+option(${PROJECT_NAME}_USE_GTEST "Use the GoogleTest project for creating unit tests." ON)
+option(${PROJECT_NAME}_USE_GOOGLE_MOCK "Use the GoogleMock project for extending the unit tests." ON)
+option(${PROJECT_NAME}_USE_CATCH2 "Use the Catch2 project for creating unit tests." OFF)
+
+#
 # Static analyzers
 #
 # Currently supporting: Clang-Tidy, Cppcheck.
 option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable static analysis with Clang-Tidy." OFF)
 option(${PROJECT_NAME}_ENABLE_CPPCHECK "Enable static analysis with Cppcheck." OFF)
+
+#
+# Code coverage
+#
+option(${PROJECT_NAME}_ENABLE_CODE_COVERAGE_GCC "Enable code coverage through GCC." OFF)
+option(${PROJECT_NAME}_ENABLE_CODE_COVERAGE_CLANG "Enable code coverage through CLANG." OFF)
 
 #
 # Doxygen
@@ -25,7 +40,7 @@ option(${PROJECT_NAME}_ENABLE_DOXYGEN "Enable Doxygen documentation builds of so
 #
 # Miscelanious options
 #
-#--------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # Generate compile_commands.json for clang based tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -65,4 +80,4 @@ if(${PROJECT_NAME}_ENABLE_ASAN)
     add_compile_options(-fsanitize=address)
     add_link_options(-fsanitize=address)
 endif()
-#--------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------

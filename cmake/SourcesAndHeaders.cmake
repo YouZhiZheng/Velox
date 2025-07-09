@@ -1,8 +1,5 @@
 set(sources
-    src/clockdatabase.cpp
-    src/kmeans.cpp
-    src/legalization.cpp
-    src/delays.cpp
+  src/log.cpp
 )
 
 set(exe_sources
@@ -11,16 +8,9 @@ set(exe_sources
 )
 
 set(headers
-    include/clockdatabase.hpp
-    include/kmeans.hpp
-    include/node.hpp
-    include/kdtree.hpp
-    include/legalization.hpp
-    include/delays.hpp
-    include/mytime.hpp
-    include/mymath.hpp
+  include/log.hpp
 )
 
 set(test_sources
-  src/tmp_test.cpp
+  log/log_test.cpp
 )

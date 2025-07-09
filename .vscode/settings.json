@@ -1,3 +1,122 @@
 {
-    "C_Cpp.default.compilerPath": "/usr/bin/clang++-18"
+  "files.associations": {
+    ".jsonc": "json",
+  },
+  // 配置TODO Tree
+  "todo-tree.tree.scanMode": "workspace only",
+  "todo-tree.filtering.excludeGlobs": [
+    "**/node_modules",
+    "*.xml",
+    "*.XML",
+    "**/*.txt"
+  ],
+  "todo-tree.filtering.ignoreGitSubmodules": true,
+  "todo-tree.tree.showCountsInTree": true,
+  //"todo-tree.regex.regex": "/(//|#|<!--|;|/\\*|^)\\s*((BUG|HACK|FIXME|TODO|INFO|NOTE|TAG|XXX)\\b[^\\r\\n]*)/gm",
+  "todo-tree.highlights.customHighlight": {
+    "BUG": {
+      "icon": "bug",
+      "foreground": "#FF4D4D",
+      "type": "line"
+    },
+    "FIXME": {
+      "icon": "flame",
+      "foreground": "#FF9800",
+      "type": "line"
+    },
+    "TODO": {
+      "icon": "check",
+      "foreground": "#00ACC1",
+      "type": "line"
+    },
+    "NOTE": {
+      "icon": "note",
+      "foreground": "#44D62C",
+      "type": "line"
+    },
+    "INFO": {
+      "icon": "info",
+      "foreground": "#4CAF50",
+      "type": "line"
+    },
+    "TAG": {
+      "icon": "tag",
+      "foreground": "#2196F3",
+      "type": "line"
+    },
+    "HACK": {
+      "icon": "versions",
+      "foreground": "#D500F9",
+      "type": "line"
+    },
+    "XXX": {
+      "icon": "unverified",
+      "foreground": "#FF4081",
+      "type": "line"
+    }
+  },
+  "todo-tree.general.tags": [
+    "BUG",
+    "HACK",
+    "FIXME",
+    "TODO",
+    "INFO",
+    "NOTE",
+    "TAG",
+    "XXX"
+  ],
+  "todo-tree.general.statusBar": "total",
+  // 配置 clangd
+  "clangd.path": "/usr/bin/clangd-18",
+  "clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}/build",
+    "--background-index",
+    "--clang-tidy",
+    "--all-scopes-completion",
+    "--completion-style=detailed",
+    "--header-insertion=never",
+    "--fallback-style=Google",
+    "--query-driver=/usr/bin/clang++-18",
+    "--resource-dir=/usr/lib/llvm-18/lib/clang/18",
+    "--log=verbose",
+    "--pretty",
+  ],
+  // 配置 clang-format
+  "clang-format.executable": "/usr/bin/clang-format-18",
+  "[cpp]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  // 配置文件格式
+  "editor.fontSize": 16,
+  "editor.detectIndentation": false,
+  "editor.trimAutoWhitespace": true,
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": false,
+  "editor.wordWrap": "bounded",
+  "editor.wordWrapColumn": 125,
+  // CMake 配置
+  "cmake.generator": "Unix Makefiles",
+  // 配置文件开头注释
+  "fileHeaderComment.parameter": {
+    "*": {
+      "commentbegin": "/**",
+      "commentprefix": " *",
+      "commentend": " */",
+    }
+  },
+  "fileHeaderComment.template": {
+    "default": [
+      "${commentbegin}",
+      "${commentprefix} @file ${fileName}",
+      "${commentprefix} @brief ",
+      "${commentprefix} @author zhengyouzhi",
+      "${commentprefix} @email youzhizheng9@gmail.com",
+      "${commentprefix} @date ${year}-${month}-${day}",
+      "${commentprefix} @copyright Copyright (c) ${year} zhengyouzhi",
+      "${commentprefix} @license   GNU General Public License v3.0",
+      "${commentprefix}            See LICENSE file in the project root for full license information.",
+      "${commentend}"
+    ]
+  }
 }

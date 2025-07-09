@@ -27,6 +27,7 @@ export PRINT_HELP_PYSCRIPT
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
 INSTALL_LOCATION := ~/.local
 
+C_COMPILER := clang-18
 CXX_COMPILER := clang++-18
 LINKER := lld-18
 
@@ -36,8 +37,8 @@ help:
 docs: ## generate Doxygen HTML documentation, including API docs
 	rm -rf docs/
 	rm -rf build/
-	cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$(INSTALL_LOCATION) \
-		-DCMAKE_CXX_COMPILER=$(CXX_COMPILER) \
+	cmake -Bbuild -DCMAKE_CXX_COMPILER=$(CXX_COMPILER) \
+		-DCMAKE_C_COMPILER=$(C_COMPILER) \
 		-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=$(LINKER)" \
 		-DProject_ENABLE_DOXYGEN=1
 	cmake --build build --config Release
@@ -46,33 +47,36 @@ docs: ## generate Doxygen HTML documentation, including API docs
 
 debug: ## Build the project in Debug mode
 	rm -rf build/
-	cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$(INSTALL_LOCATION) \
-		-DCMAKE_CXX_COMPILER=$(CXX_COMPILER) \
-		-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=$(LINKER)" \
-		-DCMAKE_BUILD_TYPE="Debug"
-	cmake --build build --config Debug
+	cmake -Bbuild -DCMAKE_CXX_COMPILER=$(CXX_COMPILER) \
+		-DCMAKE_C_COMPILER=$(C_COMPILER) \
+		-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=$(LINKER)"
+	cmake --build build
 
 release: ## Build the project in Release mode
 	rm -rf build/
-	cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$(INSTALL_LOCATION) \
-		-DCMAKE_CXX_COMPILER=$(CXX_COMPILER) \
+	cmake -Bbuild -DCMAKE_CXX_COMPILER=$(CXX_COMPILER) \
+		-DCMAKE_C_COMPILER=$(C_COMPILER) \
 		-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=$(LINKER)" \
 		-DCMAKE_BUILD_TYPE="Release"
-	cmake --build build --config Release
+	cmake --build build
 
 static: ## Build the project with static linking
 	rm -rf build/
-	cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$(INSTALL_LOCATION) \
+	cmake -Bbuild -DCMAKE_C_COMPILER=$(C_COMPILER) \
 		-DCMAKE_CXX_COMPILER=$(CXX_COMPILER) \
 		-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=$(LINKER)" \
 		-DCMAKE_BUILD_TYPE="Release" \
 		-DBUILD_SHARED_LIBS=OFF
-	cmake --build build --config Release
+	cmake --build build
 
 install: ## install the package to the INSTALL_LOCATION
 	rm -rf build/
 	cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$(INSTALL_LOCATION) \
 		-DCMAKE_CXX_COMPILER=$(CXX_COMPILER) \
+		-DCMAKE_C_COMPILER=$(C_COMPILER) \
 		-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=$(LINKER)"
 	cmake --build build --config Release
 	cmake --build build --target install --config Release
+
+build: ## Incrementally build the project after source changes
+	cmake --build build
