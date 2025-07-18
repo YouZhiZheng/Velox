@@ -140,7 +140,7 @@ TEST(TypeConverterTest, unorderedMap)
 }
 
 // 测试 YAML 中最常用的嵌套结构(map 中包含 vector)
-TEST(TypeConverterTest, NestedMapWithVector)
+TEST(TypeConverterTest, nestedMapWithVector)
 {
   using NestedType = std::map<std::string, std::vector<int>>;
   TypeConverter<NestedType, std::string> to_string;
@@ -193,7 +193,7 @@ TEST_F(ConfigVarTest, basicType)
 }
 
 // 测试复杂类型的 ConfigVar
-TEST_F(ConfigVarTest, ComplexType)
+TEST_F(ConfigVarTest, complexType)
 {
   std::vector<std::string> default_vec = { "admin", "user" };
   auto var = std::make_shared<ConfigVar<std::vector<std::string>>>("system.users", default_vec, "System Users");
@@ -219,6 +219,85 @@ TEST_F(ConfigVarTest, ComplexType)
 
   std::vector<std::string> expected_vec = { "guest", "root" };
   EXPECT_EQ(var->getValue(), expected_vec);
+}
+
+// 测试 ConfigVar 的变更回调函数
+TEST_F(ConfigVarTest, changCallbacks)
+{
+  ConfigVar<int>::ptr var = std::make_shared<ConfigVar<int>>("test.int", 10, "test integer var");
+
+  // 测试单个回调
+  {
+    // 定义一组变量, 用于检查回调是否被调用
+    int callback_count = 0;
+    int old_value = 0;
+    int new_value = 0;
+
+    // 注册变更监听器
+    uint64_t id = var->addListener(
+        [&](const int& old_val, const int& new_val)
+        {
+          ++callback_count;
+          old_value = old_val;
+          new_value = new_val;
+        });
+
+    // 改变值, 应该触发回调
+    var->setValue(20);
+    EXPECT_EQ(callback_count, 1);
+    EXPECT_EQ(old_value, 10);
+    EXPECT_EQ(new_value, 20);
+
+    // 值未变, 不触发回调
+    var->setValue(20);
+    EXPECT_EQ(callback_count, 1);
+
+    // 删除回调
+    var->delListener(id);
+    var->setValue(30);
+    EXPECT_EQ(callback_count, 1);
+  }
+
+  // 测试一组回调
+  {
+    ConfigVar<std::string>::ptr var = std::make_shared<ConfigVar<std::string>>("test.str", "hello");
+
+    int count1 = 0;
+    int count2 = 0;
+    int count3 = 0;
+
+    uint64_t id1 = var->addListener([&count1](const std::string& old_val, const std::string& new_val) { ++count1; });
+    uint64_t id2 = var->addListener([&count2](const std::string& old_val, const std::string& new_val) { ++count2; });
+    uint64_t id3 = var->addListener([&count3](const std::string& old_val, const std::string& new_val) { ++count3; });
+
+    var->setValue("world");
+    EXPECT_EQ(count1, 1);
+    EXPECT_EQ(count2, 1);
+    EXPECT_EQ(count3, 1);
+
+    // 删除 key 为 id1 的回调函数
+    var->delListener(id1);
+    var->setValue("hello world");
+    EXPECT_EQ(count1, 1);
+    EXPECT_EQ(count2, 2);
+    EXPECT_EQ(count3, 2);
+
+    // 直接调用 key 为 id2 的回调函数
+    auto cb = var->getListener(id2);
+    ASSERT_NE(cb, nullptr);
+    cb("1", "2");
+    EXPECT_EQ(count2, 3);
+
+    // 清除全部回调函数
+    var->clearAllListener();
+    var->setValue("hello world!!!");
+    EXPECT_EQ(count1, 1);
+    EXPECT_EQ(count2, 3);
+    EXPECT_EQ(count3, 2);
+    EXPECT_EQ(var->getListener(id1), nullptr);
+    EXPECT_EQ(var->getListener(id2), nullptr);
+    EXPECT_EQ(var->getListener(id3), nullptr);
+  }
 }
 
 class ConfigTest : public ::testing::Test

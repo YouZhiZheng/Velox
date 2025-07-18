@@ -379,6 +379,7 @@ namespace velox::config
   {
    public:
     using ptr = std::shared_ptr<ConfigVar>;
+    using on_change_cb = std::function<void(const T& old_val, const T& new_val)>;  // 变更回调
 
     /**
      * @brief 通过参数名,参数值,描述构造ConfigVar
@@ -451,12 +452,62 @@ namespace velox::config
 
     /**
      * @brief 设置当前参数的值
-     * @details 如果参数的值有发生变化,则通知对应的注册回调函数
+     * @details 当参数的值发生变化时会调用该变量所对应的变更回调函数
      */
-    void setValue(const T& value) { m_val = value; }
+    void setValue(const T& value)
+    {
+      if (value == m_val)
+      {
+        return;
+      }
+
+      T old_val = m_val;
+      m_val = value;
+
+      for (const auto& [id, cb] : m_cbs)
+      {
+        cb(old_val, m_val);
+      }
+    }
+
+    /**
+     * @brief 添加变化回调函数
+     * @return 返回该回调函数对应的唯一 id, 用于删除回调
+     */
+    uint64_t addListener(on_change_cb cb)
+    {
+      static uint64_t s_fun_id = 0;
+      ++s_fun_id;
+      m_cbs[s_fun_id] = cb;
+      return s_fun_id;
+    }
+
+    /**
+     * @brief 删除回调函数
+     * @param[in] key 回调函数的唯一id
+     */
+    void delListener(uint64_t key) { m_cbs.erase(key); }
+
+    /**
+     * @brief 获取回调函数
+     * @param[in] key 回调函数的唯一id
+     * @return 如果存在返回对应的回调函数,否则返回 nullptr
+     */
+    on_change_cb getListener(uint64_t key)
+    {
+      auto it = m_cbs.find(key);
+      return it == m_cbs.end() ? nullptr : it->second;
+    }
+
+    /**
+     * @brief 清理所有的回调函数
+     */
+    void clearAllListener() { m_cbs.clear(); }
 
    private:
     T m_val;
+    // 变更回调函数组, key为 uint64_t
+    std::unordered_map<uint64_t, on_change_cb> m_cbs;
   };
 
   /**
