@@ -20,11 +20,6 @@
 #include <filesystem>
 #include <string>
 
-// 判断CMake是否生成了 PROJECT_ROOT_DIR 宏定义
-#ifndef PROJECT_ROOT_DIR
-#define PROJECT_ROOT_DIR ""
-#endif
-
 namespace velox::log
 {
   constexpr std::size_t DEFAULT_QUEUE_SIZE = 32768;
@@ -71,7 +66,7 @@ namespace velox::log
 /**
  * @brief 使用默认参数初始化
  */
-#define VELOX_LOG_INIT() velox::log::initSpdlog()
+#define VELOX_LOG_INIT(...) velox::log::initSpdlog(__VA_ARGS__)
 
 /**
  * @brief 关闭日志系统

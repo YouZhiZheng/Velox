@@ -74,7 +74,7 @@
     "--clang-tidy",
     "--all-scopes-completion",
     "--completion-style=detailed",
-    "--header-insertion=never",
+    "--header-insertion=iwyu",
     "--fallback-style=Google",
     "--query-driver=/usr/bin/clang++-18",
     "--resource-dir=/usr/lib/llvm-18/lib/clang/18",
@@ -116,7 +116,9 @@
       "${commentprefix} @copyright Copyright (c) ${year} zhengyouzhi",
       "${commentprefix} @license   GNU General Public License v3.0",
       "${commentprefix}            See LICENSE file in the project root for full license information.",
-      "${commentend}"
+      "${commentend}",
+      "",
+      "#pragma once"
     ]
   }
 }

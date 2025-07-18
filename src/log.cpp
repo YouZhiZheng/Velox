@@ -2,20 +2,22 @@
 
 #include <iostream>
 
+#include "util.hpp"
+
 namespace velox::log
 {
   std::filesystem::path getLogPath(const std::string& name)
   {
-    static const std::filesystem::path root(PROJECT_ROOT_DIR);
+    const auto& root_path = velox::util::getProjectRootPath();
     std::filesystem::path log_dir;
 
     if (name == "default")
     {
-      log_dir = root / "logs";
+      log_dir = root_path / "logs";
     }
     else
     {
-      log_dir = root / "logs" / name;
+      log_dir = root_path / "logs" / name;
     }
 
     std::filesystem::create_directories(log_dir);

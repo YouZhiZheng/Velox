@@ -1,5 +1,5 @@
 ---
-Checks: '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trailing-return-type,-llvm-*,-llvmlibc-*,-altera-unroll-loops,-cppcoreguidelines-macro-usage'
+Checks: '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trailing-return-type,-llvm-*,-llvmlibc-*,-altera-unroll-loops,-cppcoreguidelines-macro-usage,-readability-identifier-length,-misc-no-recursion'
 CheckOptions:
   # 现代化（Modernize）
   - key:             modernize-redundant-void-arg

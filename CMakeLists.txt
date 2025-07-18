@@ -177,13 +177,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:
 
 # gtest
 if(${PROJECT_NAME}_ENABLE_UNIT_TESTING AND ${PROJECT_NAME}_USE_GTEST)
-  message(STATUS "Adding googletest subdirectory.\n")
+  message(STATUS "Adding googletest subdirectory.")
   add_subdirectory(thirdparty/googletest)
 endif()
 
-# # Threads
-# find_package(Threads REQUIRED)
-# target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
+# yaml-cpp
+message(STATUS "Adding yaml-cpp subdirectory.\n")
+add_subdirectory(thirdparty/yaml-cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE yaml-cpp::yaml-cpp)
+include_directories(BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/yaml-cpp/include") # Shield system version
 
 # ---------------------------------------------------------------------------------------
 # Set the build/user include directories

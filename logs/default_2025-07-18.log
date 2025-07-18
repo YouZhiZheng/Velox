@@ -1,0 +1,77 @@
+[2025-07-18 19:44:28.149][thread 83544][info][default][config.hpp:491]: ConfigVar [name:server.port, valueType:int] exists
+[2025-07-18 19:44:28.149][thread 83544][error][default][config.hpp:501]: ConfigVar name server.port exists but type not std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, real type is int:8000
+[2025-07-18 19:44:28.149][thread 83544][error][default][config.hpp:501]: ConfigVar name server.hosts exists but type not std::vector<int, std::allocator<int> >, real type is std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >:- localhost
+[2025-07-18 19:44:28.149][thread 83544][error][default][config.hpp:508]: ConfigVar name invalid: invalid-name
+[2025-07-18 19:44:28.150][thread 83544][error][default][config.hpp:508]: ConfigVar name invalid: InvalidName
+[2025-07-18 19:44:28.150][thread 83544][error][default][config.hpp:508]: ConfigVar name invalid: invalid@name
+[2025-07-18 19:44:28.150][thread 83544][error][default][config.hpp:508]: ConfigVar name invalid: invalid#name
+[2025-07-18 19:44:28.150][thread 83544][error][default][config.hpp:508]: ConfigVar name invalid: #invalid.name
+[2025-07-18 19:44:28.150][thread 83544][error][default][config.hpp:508]: ConfigVar name invalid: 
+[2025-07-18 19:44:28.155][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/server.yml'
+[2025-07-18 19:44:28.155][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/worker.yml'
+[2025-07-18 19:44:28.156][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/log.yml'
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.address.0
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.address.1
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.address.2
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.keepalive
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.timeout
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.name
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.accept_worker
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.io_worker
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.process_worker
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.type
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.address.0
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.address.1
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.timeout
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.name
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.accept_worker
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.io_worker
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.process_worker
+[2025-07-18 19:44:28.157][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.type
+[2025-07-18 19:44:28.157][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/server.yml'
+[2025-07-18 19:44:28.157][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/worker.yml'
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.name
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.level
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.appenders.0.type
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.appenders.0.file
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.appenders.1.type
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.name
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.level
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.appenders.0.type
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.appenders.0.file
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.appenders.1.type
+[2025-07-18 19:44:28.158][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/log.yml'
+[2025-07-18 19:44:28.158][thread 83544][info][default][config.cpp:124]: Skip config file '/home/zyz/CPlusPlusProject/Velox/test/config/server.yml': unchanged since last load.
+[2025-07-18 19:44:28.158][thread 83544][info][default][config.cpp:124]: Skip config file '/home/zyz/CPlusPlusProject/Velox/test/config/worker.yml': unchanged since last load.
+[2025-07-18 19:44:28.158][thread 83544][info][default][config.cpp:124]: Skip config file '/home/zyz/CPlusPlusProject/Velox/test/config/log.yml': unchanged since last load.
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.address.0
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.address.1
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.address.2
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.keepalive
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.timeout
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.name
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.accept_worker
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.io_worker
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.process_worker
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.0.type
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.address.0
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.address.1
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.timeout
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.name
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.accept_worker
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.io_worker
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.process_worker
+[2025-07-18 19:44:28.158][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: servers.1.type
+[2025-07-18 19:44:28.158][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/server.yml'
+[2025-07-18 19:44:28.158][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/worker.yml'
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.name
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.level
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.appenders.0.type
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.appenders.0.file
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.0.appenders.1.type
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.name
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.level
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.appenders.0.type
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.appenders.0.file
+[2025-07-18 19:44:28.159][thread 83544][warning][default][config.cpp:88]: Unrecognized config key: logs.1.appenders.1.type
+[2025-07-18 19:44:28.159][thread 83544][info][default][config.cpp:133]: Loaded config file '/home/zyz/CPlusPlusProject/Velox/test/config/log.yml'

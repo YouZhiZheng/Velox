@@ -71,6 +71,11 @@ foreach(file ${test_sources})
     message(FATAL_ERROR "Unknown testing library. Please setup your desired unit testing library by using `target_link_libraries`.")  
   endif()
 
+  # Add yaml-cpp dependency to specific tests
+  if(${test_name} STREQUAL "config_test")
+    target_link_libraries(${test_name}_Tests PRIVATE yaml-cpp::yaml-cpp)
+  endif()
+
   #
   # Add the unit tests
   #
