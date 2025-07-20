@@ -23,14 +23,15 @@ namespace velox::config
       const YAML::Node& node,
       std::vector<std::pair<const std::string, const YAML::Node>>& output)
   {
-    if (velox::util::isValidName(prefix))
-    {
-      output.emplace_back(prefix, node);
-    }
-    else if (!prefix.empty())
+    if (!prefix.empty() && !velox::util::isValidName(prefix))
     {
       VELOX_ERROR("Config invalid name: {} : {}", prefix, YAML::Dump(node));
       return;
+    }
+
+    if (!prefix.empty())
+    {
+      output.emplace_back(prefix, node);
     }
 
     if (node.IsMap())
@@ -52,14 +53,6 @@ namespace velox::config
         listAllMembers(new_prefix, kv.second, output);
       }
     }
-    else if (node.IsSequence())
-    {
-      for (size_t i = 0; i < node.size(); ++i)
-      {
-        const std::string new_prefix = prefix + "." + std::to_string(i);
-        listAllMembers(new_prefix, node[i], output);
-      }
-    }
   }
 
   void Config::loadFromYaml(const YAML::Node& root)
@@ -69,19 +62,23 @@ namespace velox::config
 
     for (const auto& node_pair : all_nodes)
     {
-      // 如果不是标量(即它是一个Map或Sequence), 则直接跳过, 不作处理
-      if (!node_pair.second.IsScalar())
-      {
-        continue;
-      }
-
       const std::string& key = node_pair.first;
-      ConfigVarBase::ptr p_var = getConfigVarBasePtr(key);
+      ConfigVarBase::ptr var_ptr = getConfigVarBasePtr(key);
 
       // 判断该 key 是否已经注册, 注册则更新其值
-      if (p_var)
+      if (var_ptr)
       {
-        p_var->fromString(node_pair.second.Scalar());
+        // 在这里 YAML::Node 只会是标量或列表
+        if (node_pair.second.IsScalar())
+        {
+          var_ptr->fromString(node_pair.second.Scalar());
+        }
+        else
+        {
+          std::stringstream ss;
+          ss << node_pair.second;
+          var_ptr->fromString(ss.str());
+        }
       }
       else
       {

@@ -13,6 +13,7 @@
 
 #include <gtest/gtest.h>
 
+#include <stdexcept>
 #include <vector>
 
 #include "log.hpp"
@@ -163,6 +164,227 @@ TEST(TypeConverterTest, nestedMapWithVector)
   TypeConverter<std::string, NestedType> from_string;
   NestedType m2 = from_string(yaml_str);
   EXPECT_EQ(m, m2);
+}
+
+// 测试自定义类型的转换
+// 定义一个类型
+namespace velox::test
+{
+  // 日志输出器类型(强类型枚举)
+  enum class AppenderType
+  {
+    File = 1,
+    Stdout,
+  };
+
+  struct LogAppenderDefine
+  {
+    AppenderType type = AppenderType::File;
+    std::string level = "DEBUG";
+    std::string formatter = "%^[%Y-%m-%d %T.%e][thread %t][%l][%n][%s:%#]: %v%$";
+    std::string file;
+
+    bool operator==(const LogAppenderDefine& oth) const
+    {
+      return type == oth.type && level == oth.level && formatter == oth.formatter && file == oth.file;
+    }
+  };
+
+  struct LogDefine
+  {
+    std::string name;
+    std::string level = "DEBUG";
+    std::string formatter = "%^[%Y-%m-%d %T.%e][thread %t][%l][%n][%s:%#]: %v%$";
+    std::vector<LogAppenderDefine> appenders;
+
+    bool operator==(const LogDefine& oth) const
+    {
+      return name == oth.name && level == oth.level && formatter == oth.formatter && appenders == oth.appenders;
+    }
+  };
+}  // namespace velox::test
+
+// 实现对应的偏特化
+namespace velox::config
+{
+  // string -> LogDefine
+  template<>
+  class TypeConverter<std::string, velox::test::LogDefine>
+  {
+   public:
+    velox::test::LogDefine operator()(const std::string& v)
+    {
+      YAML::Node node = YAML::Load(v);
+      velox::test::LogDefine log_def;
+
+      if (node["name"].IsDefined())
+      {
+        log_def.name = node["name"].as<std::string>();
+      }
+      else
+      {
+        std::cout << "log config error: name is null\n";
+        throw std::logic_error("log config name is null");
+      }
+
+      if (node["level"].IsDefined())
+      {
+        log_def.level = node["level"].as<std::string>();
+      }
+
+      if (node["formatter"].IsDefined())
+      {
+        log_def.formatter = node["formatter"].as<std::string>();
+      }
+
+      if (node["appenders"].IsDefined())
+      {
+        for (size_t i = 0; i < node["appenders"].size(); ++i)
+        {
+          auto appender = node["appenders"][i];
+
+          if (!appender["type"].IsDefined())
+          {
+            std::cout << "log config error: appender type is null, " << YAML::Dump(appender) << std::endl;
+            continue;
+          }
+
+          auto type = appender["type"].as<std::string>();
+          velox::test::LogAppenderDefine log_app_def;
+          if (type == "FileLogAppender")
+          {
+            log_app_def.type = velox::test::AppenderType::File;
+
+            if (!appender["file"].IsDefined())
+            {
+              std::cout << "log config error: fileappender file is null, " << YAML::Dump(appender) << std::endl;
+              continue;
+            }
+
+            log_app_def.file = appender["file"].as<std::string>();
+          }
+          else if (type == "StdoutLogAppender")
+          {
+            log_app_def.type = velox::test::AppenderType::Stdout;
+          }
+          else
+          {
+            std::cout << "log config error: appender type is invalid, " << YAML::Dump(appender) << std::endl;
+            continue;
+          }
+
+          if (appender["level"].IsDefined())
+          {
+            log_app_def.level = appender["level"].as<std::string>();
+          }
+
+          if (appender["formatter"].IsDefined())
+          {
+            log_app_def.formatter = appender["formatter"].as<std::string>();
+          }
+
+          log_def.appenders.push_back(log_app_def);
+        }
+      }
+
+      return log_def;
+    }
+  };
+
+  // LogDefine -> string
+  template<>
+  class TypeConverter<velox::test::LogDefine, std::string>
+  {
+   public:
+    std::string operator()(const velox::test::LogDefine& ld)
+    {
+      YAML::Node node;
+      node["name"] = ld.name;
+      node["level"] = ld.level;
+      node["formatter"] = ld.formatter;
+
+      for (const auto& app : ld.appenders)
+      {
+        YAML::Node app_node;
+
+        if (app.type == velox::test::AppenderType::File)
+        {
+          app_node["type"] = "FileLogAppender";
+          app_node["file"] = app.file;
+        }
+        else
+        {
+          app_node["type"] = "StdoutLogAppender";
+        }
+
+        app_node["level"] = app.level;
+        app_node["formatter"] = app.formatter;
+
+        node["appenders"].push_back(app_node);
+      }
+
+      std::stringstream ss;
+      ss << node;
+      return ss.str();
+    }
+  };
+
+}  // namespace velox::config
+
+TEST(TypeConverterTest, logConfig)
+{
+  std::string log_yaml = R"(
+logs:
+  - name: root
+    level: info
+    appenders:
+    - type: FileLogAppender
+      file: /apps/logs/sylar/root.txt
+    - type: StdoutLogAppender
+  - name: system
+    level: info
+    appenders:
+    - type: FileLogAppender
+      file: /apps/logs/sylar/system.txt
+    - type: StdoutLogAppender)";
+
+  YAML::Node log_node = YAML::Load(log_yaml);
+  ASSERT_TRUE(log_node["logs"].IsSequence());
+
+  auto logs = log_node["logs"];
+  ASSERT_EQ(logs.size(), 2);
+
+  // 遍历每一个 log 项，并转换为 LogDefine
+  for (size_t i = 0; i < logs.size(); ++i)
+  {
+    YAML::Node log = logs[i];
+    std::string single_yaml = YAML::Dump(log);
+    velox::test::LogDefine log_def = TypeConverter<std::string, velox::test::LogDefine>()(single_yaml);
+
+    if (i == 0)
+    {
+      EXPECT_EQ(log_def.name, "root");
+      EXPECT_EQ(log_def.level, "info");
+      ASSERT_EQ(log_def.appenders.size(), 2);
+      EXPECT_EQ(log_def.appenders[0].type, velox::test::AppenderType::File);
+      EXPECT_EQ(log_def.appenders[0].file, "/apps/logs/sylar/root.txt");
+      EXPECT_EQ(log_def.appenders[1].type, velox::test::AppenderType::Stdout);
+    }
+    else
+    {
+      EXPECT_EQ(log_def.name, "system");
+      EXPECT_EQ(log_def.level, "info");
+      ASSERT_EQ(log_def.appenders.size(), 2);
+      EXPECT_EQ(log_def.appenders[0].type, velox::test::AppenderType::File);
+      EXPECT_EQ(log_def.appenders[0].file, "/apps/logs/sylar/system.txt");
+      EXPECT_EQ(log_def.appenders[1].type, velox::test::AppenderType::Stdout);
+    }
+
+    // 反向转换测试(LogDefine -> string)
+    std::string encoded = TypeConverter<velox::test::LogDefine, std::string>()(log_def);
+    velox::test::LogDefine decoded = TypeConverter<std::string, velox::test::LogDefine>()(encoded);
+    EXPECT_EQ(decoded, log_def);
+  }
 }
 
 class ConfigVarTest : public ::testing::Test
@@ -336,13 +558,16 @@ TEST_F(ConfigTest, getOrCreateConfigVarPtr)
   // 3. 类型不匹配，应返回 nullptr
   auto port_var_str = Config::getOrCreateConfigVarPtr<std::string>("server.port", "8000");
   EXPECT_EQ(port_var_str, nullptr);
-  // 测试复杂一点的情况
-  auto hosts_var = Config::getOrCreateConfigVarPtr<std::vector<std::string>>("server.hosts", { "localhost" });
-  ASSERT_NE(hosts_var, nullptr);  // 确保复杂类型创建成功
+
+  // 4.测试复杂一点的情况
+  std::vector<std::string> temp = { "localhost" };
+  auto hosts_var = Config::getOrCreateConfigVarPtr<std::vector<std::string>>("server.hosts", temp);
+  ASSERT_NE(hosts_var, nullptr);
+  EXPECT_EQ(hosts_var->getValue(), temp);
   auto hosts_var_int_vec = Config::getOrCreateConfigVarPtr<std::vector<int>>("server.hosts", { 127 });
   EXPECT_EQ(hosts_var_int_vec, nullptr);
 
-  // 4. 非法名称
+  // 5. 非法名称
   EXPECT_THROW(Config::getOrCreateConfigVarPtr<int>("invalid-name", 1), std::invalid_argument);
   EXPECT_THROW(Config::getOrCreateConfigVarPtr<int>("InvalidName", 1), std::invalid_argument);
   EXPECT_THROW(Config::getOrCreateConfigVarPtr<std::string>("invalid@name", "value"), std::invalid_argument);
@@ -376,31 +601,153 @@ TEST_F(ConfigTest, getConfigVarPtr)
   EXPECT_EQ(non_exist_var, nullptr);
 }
 
+// 定义好对应的结构体和偏特化
+namespace velox::test
+{
+  struct ServerDefine
+  {
+    std::vector<std::string> address;
+    int keepalive = 0;  // 可选, 默认 0
+    int timeout = 1000;
+    std::string name;
+    std::string accept_worker;
+    std::string io_worker;
+    std::string process_worker;
+    std::string type;
+
+    bool operator==(const ServerDefine& other) const
+    {
+      return address == other.address && keepalive == other.keepalive && timeout == other.timeout && name == other.name &&
+             accept_worker == other.accept_worker && io_worker == other.io_worker &&
+             process_worker == other.process_worker && type == other.type;
+    }
+  };
+}  // namespace velox::test
+
+namespace velox::config
+{
+  // string -> ServerDefine
+  template<>
+  class TypeConverter<std::string, velox::test::ServerDefine>
+  {
+   public:
+    velox::test::ServerDefine operator()(const std::string& v)
+    {
+      YAML::Node node = YAML::Load(v);
+      velox::test::ServerDefine def;
+
+      if (node["address"].IsDefined())
+      {
+        def.address = node["address"].as<std::vector<std::string>>();
+      }
+      else
+      {
+        VELOX_ERROR("server address list is null");
+        throw std::logic_error("server address list is null");
+      }
+
+      if (node["keepalive"].IsDefined())
+      {
+        def.keepalive = node["keepalive"].as<int>();
+      }
+
+      if (node["timeout"].IsDefined())
+      {
+        def.timeout = node["timeout"].as<int>();
+      }
+
+      if (node["name"].IsDefined())
+      {
+        def.name = node["name"].as<std::string>();
+      }
+      else
+      {
+        VELOX_ERROR("server name is empty");
+        throw std::logic_error("server name is empty");
+      }
+
+      if (node["accept_worker"].IsDefined())
+      {
+        def.accept_worker = node["accept_worker"].as<std::string>();
+      }
+      else
+      {
+        VELOX_ERROR("server accept worker is empty");
+        throw std::logic_error("server accept worker is empty");
+      }
+
+      if (node["io_worker"].IsDefined())
+      {
+        def.io_worker = node["io_worker"].as<std::string>();
+      }
+      else
+      {
+        VELOX_ERROR("server io worker is empty");
+        throw std::logic_error("server io worker is empty");
+      }
+
+      if (node["process_worker"].IsDefined())
+      {
+        def.process_worker = node["process_worker"].as<std::string>();
+      }
+      else
+      {
+        VELOX_ERROR("server process worker is empty");
+        throw std::logic_error("server process worker is empty");
+      }
+
+      if (node["type"].IsDefined())
+      {
+        def.type = node["type"].as<std::string>();
+      }
+      else
+      {
+        VELOX_ERROR("server type is empty");
+        throw std::logic_error("server type is empty");
+      }
+
+      return def;
+    }
+  };
+
+  // ServerConfig -> string
+  template<>
+  class TypeConverter<velox::test::ServerDefine, std::string>
+  {
+   public:
+    std::string operator()(const velox::test::ServerDefine& def)
+    {
+      YAML::Node node;
+
+      node["address"] = def.address;
+      if (def.keepalive != 0)
+      {
+        node["keepalive"] = def.keepalive;
+      }
+      node["timeout"] = def.timeout;
+      node["name"] = def.name;
+      node["accept_worker"] = def.accept_worker;
+      node["io_worker"] = def.io_worker;
+      node["process_worker"] = def.process_worker;
+      node["type"] = def.type;
+
+      std::stringstream ss;
+      ss << node;
+      return ss.str();
+    }
+  };
+
+}  // namespace velox::config
+
 TEST_F(ConfigTest, loadFromYaml)
 {
   // 注册配置变量
-  auto servers0_address0 = Config::getOrCreateConfigVarPtr<std::string>("servers.0.address.0", "");
-  auto servers0_address1 = Config::getOrCreateConfigVarPtr<std::string>("servers.0.address.1", "");
-  auto servers0_address2 = Config::getOrCreateConfigVarPtr<std::string>("servers.0.address.2", "");
-  auto servers0_keepalive = Config::getOrCreateConfigVarPtr<int>("servers.0.keepalive", 0);
-  auto servers0_timeout = Config::getOrCreateConfigVarPtr<int>("servers.0.timeout", 0);
-  auto servers0_name = Config::getOrCreateConfigVarPtr<std::string>("servers.0.name", "");
-  auto servers0_accept_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.0.accept_worker", "");
-  auto servers0_io_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.0.io_worker", "");
-  auto servers0_process_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.0.process_worker", "");
-  auto servers0_type = Config::getOrCreateConfigVarPtr<std::string>("servers.0.type", "");
-
-  auto servers1_address0 = Config::getOrCreateConfigVarPtr<std::string>("servers.1.address.0", "");
-  auto servers1_address1 = Config::getOrCreateConfigVarPtr<std::string>("servers.1.address.1", "");
-  auto servers1_timeout = Config::getOrCreateConfigVarPtr<int>("servers.1.timeout", 0);
-  auto servers1_name = Config::getOrCreateConfigVarPtr<std::string>("servers.1.name", "");
-  auto servers1_accept_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.1.accept_worker", "");
-  auto servers1_io_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.1.io_worker", "");
-  auto servers1_process_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.1.process_worker", "");
-  auto servers1_type = Config::getOrCreateConfigVarPtr<std::string>("servers.1.type", "");
+  auto servers_config = Config::getOrCreateConfigVarPtr<std::vector<velox::test::ServerDefine>>(
+      "servers", std::vector<velox::test::ServerDefine>(), "servers config");
 
   // 构造 YAML 内容
-  std::string yaml_content = R"(servers:
+  std::string yaml_content = R"(
+servers:
   - address: ["0.0.0.0:8090", "127.0.0.1:8091", "/tmp/test.sock"]
     keepalive: 1
     timeout: 1000
@@ -421,30 +768,36 @@ TEST_F(ConfigTest, loadFromYaml)
   YAML::Node root = YAML::Load(yaml_content);
   Config::loadFromYaml(root);
 
-  // 检查第一个 server
+  // 判断是否正确解析
+  auto servers = servers_config->getValue();
+  ASSERT_EQ(servers.size(), 2);
+
+  // 检查第一个 serverDefine
   {
-    EXPECT_EQ(servers0_address0->getValue(), "0.0.0.0:8090");
-    EXPECT_EQ(servers0_address1->getValue(), "127.0.0.1:8091");
-    EXPECT_EQ(servers0_address2->getValue(), "/tmp/test.sock");
-    EXPECT_EQ(servers0_keepalive->getValue(), 1);
-    EXPECT_EQ(servers0_timeout->getValue(), 1000);
-    EXPECT_EQ(servers0_name->getValue(), "sylar/1.1");
-    EXPECT_EQ(servers0_accept_worker->getValue(), "accept");
-    EXPECT_EQ(servers0_io_worker->getValue(), "http_io");
-    EXPECT_EQ(servers0_process_worker->getValue(), "http_io");
-    EXPECT_EQ(servers0_type->getValue(), "http");
+    auto server = servers[0];
+    std::vector<std::string> address = { "0.0.0.0:8090", "127.0.0.1:8091", "/tmp/test.sock" };
+    EXPECT_EQ(server.address, address);
+    EXPECT_EQ(server.keepalive, 1);
+    EXPECT_EQ(server.timeout, 1000);
+    EXPECT_EQ(server.name, "sylar/1.1");
+    EXPECT_EQ(server.accept_worker, "accept");
+    EXPECT_EQ(server.io_worker, "http_io");
+    EXPECT_EQ(server.process_worker, "http_io");
+    EXPECT_EQ(server.type, "http");
   }
 
-  // 检查第二个 server
+  // 检查第二个 serverDefine
   {
-    EXPECT_EQ(servers1_address0->getValue(), "0.0.0.0:8062");
-    EXPECT_EQ(servers1_address1->getValue(), "0.0.0.0:8061");
-    EXPECT_EQ(servers1_timeout->getValue(), 1000);
-    EXPECT_EQ(servers1_name->getValue(), "sylar-rock/1.0");
-    EXPECT_EQ(servers1_accept_worker->getValue(), "accept");
-    EXPECT_EQ(servers1_io_worker->getValue(), "io");
-    EXPECT_EQ(servers1_process_worker->getValue(), "io");
-    EXPECT_EQ(servers1_type->getValue(), "rock");
+    auto server = servers[1];
+    std::vector<std::string> address = { "0.0.0.0:8062", "0.0.0.0:8061" };
+    EXPECT_EQ(server.address, address);
+    EXPECT_EQ(server.keepalive, 0);
+    EXPECT_EQ(server.timeout, 1000);
+    EXPECT_EQ(server.name, "sylar-rock/1.0");
+    EXPECT_EQ(server.accept_worker, "accept");
+    EXPECT_EQ(server.io_worker, "io");
+    EXPECT_EQ(server.process_worker, "io");
+    EXPECT_EQ(server.type, "rock");
   }
 }
 
@@ -459,78 +812,76 @@ TEST_F(ConfigTest, loadFromConfDir)
   auto service_io_threads = Config::getOrCreateConfigVarPtr<int>("workers.service_io.thread_num", 0);
 
   /* ----------------------- 注册 server.yml 配置  -----------------------*/
-  auto s0_address_0 = Config::getOrCreateConfigVarPtr<std::string>("servers.0.address.0", {});
-  auto s0_address_1 = Config::getOrCreateConfigVarPtr<std::string>("servers.0.address.1", {});
-  auto s0_address_2 = Config::getOrCreateConfigVarPtr<std::string>("servers.0.address.2", {});
-  auto s0_keepalive = Config::getOrCreateConfigVarPtr<int>("servers.0.keepalive", 0);
-  auto s0_timeout = Config::getOrCreateConfigVarPtr<int>("servers.0.timeout", 0);
-  auto s0_name = Config::getOrCreateConfigVarPtr<std::string>("servers.0.name", "");
-  auto s0_accept_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.0.accept_worker", "");
-  auto s0_io_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.0.io_worker", "");
-  auto s0_process_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.0.process_worker", "");
-  auto s0_type = Config::getOrCreateConfigVarPtr<std::string>("servers.0.type", "");
-
-  auto s1_address_0 = Config::getOrCreateConfigVarPtr<std::string>("servers.1.address.0", {});
-  auto s1_address_1 = Config::getOrCreateConfigVarPtr<std::string>("servers.1.address.1", {});
-  auto s1_timeout = Config::getOrCreateConfigVarPtr<int>("servers.1.timeout", 0);
-  auto s1_name = Config::getOrCreateConfigVarPtr<std::string>("servers.1.name", "");
-  auto s1_accept_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.1.accept_worker", "");
-  auto s1_io_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.1.io_worker", "");
-  auto s1_process_worker = Config::getOrCreateConfigVarPtr<std::string>("servers.1.process_worker", "");
-  auto s1_type = Config::getOrCreateConfigVarPtr<std::string>("servers.1.type", "");
+  auto servers_config = Config::getOrCreateConfigVarPtr<std::vector<velox::test::ServerDefine>>(
+      "servers", std::vector<velox::test::ServerDefine>(), "servers config");
 
   /* ----------------------- 注册 log.yml 配置  -----------------------*/
-  auto log0_name = Config::getOrCreateConfigVarPtr<std::string>("logs.0.name", "");
-  auto log0_level = Config::getOrCreateConfigVarPtr<std::string>("logs.0.level", "");
-  auto log0_app0_type = Config::getOrCreateConfigVarPtr<std::string>("logs.0.appenders.0.type", "");
-  auto log0_app0_file = Config::getOrCreateConfigVarPtr<std::string>("logs.0.appenders.0.file", "");
-  auto log0_app1_type = Config::getOrCreateConfigVarPtr<std::string>("logs.0.appenders.1.type", "");
-
-  auto log1_name = Config::getOrCreateConfigVarPtr<std::string>("logs.1.name", "");
-  auto log1_level = Config::getOrCreateConfigVarPtr<std::string>("logs.1.level", "");
-  auto log1_app0_type = Config::getOrCreateConfigVarPtr<std::string>("logs.1.appenders.0.type", "");
-  auto log1_app0_file = Config::getOrCreateConfigVarPtr<std::string>("logs.1.appenders.0.file", "");
-  auto log1_app1_type = Config::getOrCreateConfigVarPtr<std::string>("logs.1.appenders.1.type", "");
+  auto logs_config = Config::getOrCreateConfigVarPtr<std::vector<velox::test::LogDefine>>(
+      "logs", std::vector<velox::test::LogDefine>(), "logs config");
 
   // 加载指定目录下的配置文件
   Config::loadFromConfDir("test/config");
 
   // 验证 log.yml是否正确加载
   {
-    EXPECT_EQ(log0_name->getValue(), "root");
-    EXPECT_EQ(log0_level->getValue(), "info");
-    EXPECT_EQ(log0_app0_type->getValue(), "FileLogAppender");
-    EXPECT_EQ(log0_app0_file->getValue(), "/apps/logs/sylar/root.txt");
-    EXPECT_EQ(log0_app1_type->getValue(), "StdoutLogAppender");
+    auto logs = logs_config->getValue();
+    ASSERT_EQ(logs.size(), 2);
 
-    EXPECT_EQ(log1_name->getValue(), "system");
-    EXPECT_EQ(log1_level->getValue(), "info");
-    EXPECT_EQ(log1_app0_type->getValue(), "FileLogAppender");
-    EXPECT_EQ(log1_app0_file->getValue(), "/apps/logs/sylar/system.txt");
-    EXPECT_EQ(log1_app1_type->getValue(), "StdoutLogAppender");
+    // 检查第一个 logDefine
+    {
+      auto log = logs[0];
+      EXPECT_EQ(log.name, "root");
+      EXPECT_EQ(log.level, "info");
+      ASSERT_EQ(log.appenders.size(), 2);
+      EXPECT_EQ(log.appenders[0].type, velox::test::AppenderType::File);
+      EXPECT_EQ(log.appenders[0].file, "/apps/logs/sylar/root.txt");
+      EXPECT_EQ(log.appenders[1].type, velox::test::AppenderType::Stdout);
+    }
+
+    // 检查第二个 logDefine
+    {
+      auto log = logs[1];
+      EXPECT_EQ(log.name, "system");
+      EXPECT_EQ(log.level, "info");
+      ASSERT_EQ(log.appenders.size(), 2);
+      EXPECT_EQ(log.appenders[0].type, velox::test::AppenderType::File);
+      EXPECT_EQ(log.appenders[0].file, "/apps/logs/sylar/system.txt");
+      EXPECT_EQ(log.appenders[1].type, velox::test::AppenderType::Stdout);
+    }
   }
 
   // 验证 server.yml是否正确加载
   {
-    EXPECT_EQ(s0_address_0->getValue(), "0.0.0.0:8090");
-    EXPECT_EQ(s0_address_1->getValue(), "127.0.0.1:8091");
-    EXPECT_EQ(s0_address_2->getValue(), "/tmp/test.sock");
-    EXPECT_EQ(s0_keepalive->getValue(), 1);
-    EXPECT_EQ(s0_timeout->getValue(), 1000);
-    EXPECT_EQ(s0_name->getValue(), "sylar/1.1");
-    EXPECT_EQ(s0_accept_worker->getValue(), "accept");
-    EXPECT_EQ(s0_io_worker->getValue(), "http_io");
-    EXPECT_EQ(s0_process_worker->getValue(), "http_io");
-    EXPECT_EQ(s0_type->getValue(), "http");
+    auto servers = servers_config->getValue();
+    ASSERT_EQ(servers.size(), 2);
 
-    EXPECT_EQ(s1_address_0->getValue(), "0.0.0.0:8062");
-    EXPECT_EQ(s1_address_1->getValue(), "0.0.0.0:8061");
-    EXPECT_EQ(s1_timeout->getValue(), 1000);
-    EXPECT_EQ(s1_name->getValue(), "sylar-rock/1.0");
-    EXPECT_EQ(s1_accept_worker->getValue(), "accept");
-    EXPECT_EQ(s1_io_worker->getValue(), "io");
-    EXPECT_EQ(s1_process_worker->getValue(), "io");
-    EXPECT_EQ(s1_type->getValue(), "rock");
+    // 检查第一个 serverDefine
+    {
+      auto server = servers[0];
+      std::vector<std::string> address = { "0.0.0.0:8090", "127.0.0.1:8091", "/tmp/test.sock" };
+      EXPECT_EQ(server.address, address);
+      EXPECT_EQ(server.keepalive, 1);
+      EXPECT_EQ(server.timeout, 1000);
+      EXPECT_EQ(server.name, "sylar/1.1");
+      EXPECT_EQ(server.accept_worker, "accept");
+      EXPECT_EQ(server.io_worker, "http_io");
+      EXPECT_EQ(server.process_worker, "http_io");
+      EXPECT_EQ(server.type, "http");
+    }
+
+    // 检查第二个 serverDefine
+    {
+      auto server = servers[1];
+      std::vector<std::string> address = { "0.0.0.0:8062", "0.0.0.0:8061" };
+      EXPECT_EQ(server.address, address);
+      EXPECT_EQ(server.keepalive, 0);
+      EXPECT_EQ(server.timeout, 1000);
+      EXPECT_EQ(server.name, "sylar-rock/1.0");
+      EXPECT_EQ(server.accept_worker, "accept");
+      EXPECT_EQ(server.io_worker, "io");
+      EXPECT_EQ(server.process_worker, "io");
+      EXPECT_EQ(server.type, "rock");
+    }
   }
 
   // 验证 worker.yml是否正确加载

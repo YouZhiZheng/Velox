@@ -20,49 +20,6 @@
 #include <filesystem>
 #include <string>
 
-namespace velox::log
-{
-  constexpr std::size_t DEFAULT_QUEUE_SIZE = 32768;
-  constexpr std::size_t DEFAULT_THREAD_NUM = 1;
-
-  /**
-   * @brief 对 spdlog 进行初始化, 最终会创建一个默认异步构造器
-   * @param[in] queue_size 用于异步 logger 的队列大小
-   * @param[in] n_threads 用于异步 logger 的线程数
-   * @return 成功返回 true
-   */
-  bool initSpdlog(std::size_t queue_size = DEFAULT_QUEUE_SIZE, std::size_t n_threads = DEFAULT_THREAD_NUM);
-
-  /**
-   * @brief 获取或创建一个异步logger
-   * @param[in] name 要创建或获取的 logger 名字
-   * @return 返回对应的logger
-   */
-  std::shared_ptr<spdlog::logger> getAsyncFileLogger(const std::string& name);
-
-  /**
-   * @brief 获取指定 logger 的日志文件存储路径
-   * @param[in] name logger 名字
-   * @return 返回该 logger 的日志文件的绝对存储路径
-   */
-  std::filesystem::path getLogPath(const std::string& name);
-
-  // /**
-  //  * @brief 获取相对于项目根目录的路径
-  //  * @param[in] full_path 完整路径
-  //  */
-  // inline constexpr std::string_view getRelativePath(std::string_view full_path)
-  // {
-  //   constexpr auto root_len = sizeof(PROJECT_ROOT_DIR) - 1;
-  //   if ((full_path.length() > root_len) && (full_path.substr(0, root_len) == PROJECT_ROOT_DIR) && full_path[root_len] ==
-  //   '/')
-  //   {
-  //     return full_path.substr(root_len + 1);
-  //   }
-  //   return full_path;
-  // }
-}  // namespace velox::log
-
 /**
  * @brief 使用默认参数初始化
  */
@@ -86,7 +43,7 @@ namespace velox::log
 /**
  * @brief 获取指定 logger
  */
-#define VELOX_GETLOG(LOG_NAME) velox::log::getAsyncFileLogger(LOG_NAME)
+#define VELOX_GETLOG(name) velox::log::getAsyncLogger(name)
 
 /**
  * @brief 使用指定日志器进行输出, 输出到文件
@@ -102,3 +59,47 @@ namespace velox::log
  * @brief 获取一个计时器
  */
 #define VELOX_LOGSW() spdlog::stopwatch()
+
+namespace velox::log
+{
+  constexpr std::size_t DEFAULT_QUEUE_SIZE = 32768;
+  constexpr std::size_t DEFAULT_THREAD_NUM = 1;
+
+  /**
+   * @brief 对 spdlog 进行初始化, 最终会创建一个默认异步构造器
+   * @param[in] queue_size 用于异步 logger 的队列大小
+   * @param[in] n_threads 用于异步 logger 的线程数
+   * @return 成功返回 true
+   */
+  bool initSpdlog(std::size_t queue_size = DEFAULT_QUEUE_SIZE, std::size_t n_threads = DEFAULT_THREAD_NUM);
+
+  /**
+   * @brief 获取指定名称的异步logger
+   * @param[in] name 要获取的 logger 名字
+   * @return 返回对应的logger指针
+   */
+  std::shared_ptr<spdlog::logger> getAsyncLogger(const std::string& name);
+
+  /**
+   * @brief 根据 file 构造日志文件的绝对存储路径
+   * @param[in] file 相对于项目根目录的相对路径, 比如 logs/config/config.log
+   * @details 如果 file 的值为 default, 则等价于 logs/default.log, 这是默认的全局
+   *
+   */
+  std::filesystem::path getLogPath(const std::string& file);
+
+  // /**
+  //  * @brief 获取相对于项目根目录的路径
+  //  * @param[in] full_path 完整路径
+  //  */
+  // inline constexpr std::string_view getRelativePath(std::string_view full_path)
+  // {
+  //   constexpr auto root_len = sizeof(PROJECT_ROOT_DIR) - 1;
+  //   if ((full_path.length() > root_len) && (full_path.substr(0, root_len) == PROJECT_ROOT_DIR) && full_path[root_len] ==
+  //   '/')
+  //   {
+  //     return full_path.substr(root_len + 1);
+  //   }
+  //   return full_path;
+  // }
+}  // namespace velox::log

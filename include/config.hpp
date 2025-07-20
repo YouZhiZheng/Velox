@@ -13,6 +13,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <boost/lexical_cast.hpp>
 #include <list>
 #include <map>
 #include <set>
@@ -99,7 +100,7 @@ namespace velox::config
      * @return v 转换后的目标类型
      * @exception 当类型不可转换时抛出异常
      */
-    T operator()(const F& v) { return velox::util::convert<T>(v); }
+    T operator()(const F& v) { return boost::lexical_cast<T>(v); }
   };
 
   /**

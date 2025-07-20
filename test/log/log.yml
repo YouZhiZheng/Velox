@@ -1,0 +1,14 @@
+logs:
+  # 设置输出格式, 详细可参考 https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
+  # 默认格式为 [2025-07-03 11:17:53.345][thread Id][fiber id][debug][Logger][main.cpp:37]: ......
+  # file为相对于项目根路径的路径
+  - name: test1
+    level: info
+    appenders:
+    - type: FileLogAppender
+      file: logs/test1/test1.log
+  - name: test2
+    level: info
+    appenders:
+    - type: FileLogAppender
+      file: logs/test2/test2.log

@@ -22,6 +22,8 @@
 #include <sstream>
 #include <thread>
 
+#include "config.hpp"
+
 /**
  * @brief 清除指定目录下的子目录和文件
  * @param[in] dir 指定目录路径
@@ -100,7 +102,7 @@ class LogTest : public ::testing::Test
   }
 };
 
-// 对默认 logger 进行测试
+// 测试默认 logger
 TEST_F(LogTest, DefaultLogger)
 {
   // 单线程环境
@@ -176,12 +178,22 @@ TEST_F(LogTest, DefaultLogger)
   }
 }
 
-// 对异步 logger 进行测试
+// 测试通过 log.yml 注册的异步日志器
 TEST_F(LogTest, AsyncFileLogger)
 {
+  // 未加载配置文件前应该为 nullptr
+  ASSERT_EQ(VELOX_GETLOG("test1"), nullptr);
+  ASSERT_EQ(VELOX_GETLOG("test2"), nullptr);
+
+  // 加载配置文件
+  velox::config::Config::loadFromConfDir("test/log");
+
+  auto test2_logger = VELOX_GETLOG("test1");
+
   // 单线程
   {
     auto logger = VELOX_GETLOG("test1");
+    ASSERT_NE(logger, nullptr);
 
     VELOX_LOGGER_TRACE(logger, "Test trace message from default logger");
     VELOX_LOGGER_DEBUG(logger, "Test debug message from default logger");
@@ -191,16 +203,16 @@ TEST_F(LogTest, AsyncFileLogger)
     VELOX_LOGGER_CRITICAL(logger, "Test critical message from default logger");
 
     // 判断日志文件是否存在
-    auto log_path = velox::log::getLogPath("test1");
+    auto log_path = velox::log::getLogPath("logs/test1/test1.log");
     log_path = log_path.parent_path() / ("test1_" + getCurrentDateStr() + ".log");
     ASSERT_TRUE(std::filesystem::exists(log_path)) << "Log file does not exist: " << log_path;
 
     std::this_thread::sleep_for(std::chrono::seconds(3));  // 等待3秒, 以便全部内容写入完成
 
-    // 异步logger的阈值默认为trace
+    // 异步logger的阈值设定为 info
     std::string content = readFileToString(log_path);
-    EXPECT_NE(content.find("Test trace message"), std::string::npos);
-    EXPECT_NE(content.find("Test debug message"), std::string::npos);
+    EXPECT_EQ(content.find("Test trace message"), std::string::npos);
+    EXPECT_EQ(content.find("Test debug message"), std::string::npos);
     EXPECT_NE(content.find("Test info message"), std::string::npos);
     EXPECT_NE(content.find("Test warn message"), std::string::npos);
     EXPECT_NE(content.find("Test error message"), std::string::npos);
@@ -210,6 +222,7 @@ TEST_F(LogTest, AsyncFileLogger)
   // 多线程
   {
     auto logger = VELOX_GETLOG("test2");
+    ASSERT_NE(logger, nullptr);
 
     constexpr int thread_count = 6;
     constexpr int logs_per_thread = 100;
@@ -235,7 +248,7 @@ TEST_F(LogTest, AsyncFileLogger)
     }
 
     // 判断日志文件是否存在
-    auto log_path = velox::log::getLogPath("test2");
+    auto log_path = velox::log::getLogPath("logs/test2/test2.log");
     log_path = log_path.parent_path() / ("test2_" + getCurrentDateStr() + ".log");
     ASSERT_TRUE(std::filesystem::exists(log_path)) << "Log file does not exist: " << log_path;
 

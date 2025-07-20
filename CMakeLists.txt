@@ -57,7 +57,7 @@ endif()
 
 # Prevent building in the source directory
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
-  message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there.\n")
+  message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there\n")
 endif()
 
 
@@ -139,7 +139,7 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}")
 target_compile_definitions(${PROJECT_NAME}_LIB PUBLIC PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}")
 
-message(STATUS "Added all header and implementation files.\n")
+message(STATUS "Added all header and implementation files\n")
 
 
 # ---------------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ endif()
 # Setting compiler warnings
 include(cmake/CompilerWarnings.cmake)
 set_project_warnings(${PROJECT_NAME})
-verbose_message("Applied compiler warnings. Using standard ${CMAKE_CXX_STANDARD}.\n")
+verbose_message("Applied compiler warnings. Using standard ${CMAKE_CXX_STANDARD}\n")
 
 
 # ---------------------------------------------------------------------------------------
@@ -171,21 +171,33 @@ include(cmake/Doxygen.cmake)
 # Dependency Management and Linking
 # ---------------------------------------------------------------------------------------
 # spdlog
-message(STATUS "Adding spdlog subdirectory.")
+message(STATUS "Adding spdlog subdirectory")
 add_subdirectory(thirdparty/spdlog)
 target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
 
 # gtest
 if(${PROJECT_NAME}_ENABLE_UNIT_TESTING AND ${PROJECT_NAME}_USE_GTEST)
-  message(STATUS "Adding googletest subdirectory.")
+  message(STATUS "Adding googletest subdirectory")
   add_subdirectory(thirdparty/googletest)
 endif()
 
 # yaml-cpp
-message(STATUS "Adding yaml-cpp subdirectory.\n")
+message(STATUS "Adding yaml-cpp subdirectory")
 add_subdirectory(thirdparty/yaml-cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE yaml-cpp::yaml-cpp)
 include_directories(BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/yaml-cpp/include") # Shield system version
+
+# boost
+cmake_policy(SET CMP0167 NEW)
+find_package(Boost 1.87 REQUIRED)
+if (Boost_FOUND)
+  message(STATUS "Found Boost version ${Boost_VERSION}")
+  message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}\n")
+else()
+  message(FATAL_ERROR "Boost not found! Please check system install\n")
+endif()
+target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+
 
 # ---------------------------------------------------------------------------------------
 # Set the build/user include directories
@@ -219,7 +231,7 @@ else()
   endif()
 endif()
 
-message(STATUS "Finished setting up include directories.\n")
+message(STATUS "Finished setting up include directories\n")
 
 
 # ---------------------------------------------------------------------------------------
@@ -231,7 +243,7 @@ else()
   add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 endif()
 
-verbose_message("Project is now aliased as ${PROJECT_NAME}::${PROJECT_NAME}.\n")
+verbose_message("Project is now aliased as ${PROJECT_NAME}::${PROJECT_NAME}\n")
 
 
 # ---------------------------------------------------------------------------------------
@@ -246,10 +258,10 @@ if(${PROJECT_NAME}_GENERATE_EXPORT_HEADER)
     DESTINATION
     include
   )
-  message(STATUS "Generated the export header `${PROJECT_NAME_LOWERCASE}_export.h` and installed it.")
+  message(STATUS "Generated the export header `${PROJECT_NAME_LOWERCASE}_export.h` and installed it")
 endif()
 
-message(STATUS "Finished building requirements for installing the package.\n")
+message(STATUS "Finished building requirements for installing the package\n")
 
 # ---------------------------------------------------------------------------------------
 # Unit testing setup

@@ -16,8 +16,6 @@
 
 #include <filesystem>
 #include <memory>
-#include <sstream>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <typeinfo>
@@ -80,25 +78,6 @@ namespace velox::util
     }();
 
     return name.c_str();
-  }
-
-  /**
-   * @brief 类型转化, 将原类型 F 转化成目标类型 T
-   */
-  template<typename T, typename F>
-  T convert(const F& from_value)
-  {
-    std::stringstream ss;
-    ss << from_value;
-    T to_value{};
-    ss >> to_value;
-
-    if (ss.fail() || !ss.eof())
-    {
-      throw std::runtime_error("convert failed: invalid format");
-    }
-
-    return to_value;
   }
 
   /**
