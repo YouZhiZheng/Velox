@@ -1,8 +1,9 @@
+# 设置输出格式, 详细可参考 https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
+# 默认格式为 [2025-07-03 11:17:53.345][thread Id][fiber id][debug][Logger][main.cpp:37]: ......
+# file为相对于项目根路径的路径
+# level 值必须要大写
+
 logs:
-  # 设置输出格式, 详细可参考 https://github.com/gabime/spdlog/wiki/Custom-formatting#pattern-flags
-  # 默认格式为 [2025-07-03 11:17:53.345][thread Id][fiber id][debug][Logger][main.cpp:37]: ......
-  # file为相对于项目根路径的路径
-  # level 值必须要大写
   - name: root
     level: info
     appenders:

@@ -1,0 +1,13 @@
+# ThreadPool 配置项说明(默认值见括号)
+# max_task_count       : 最大任务数 (0 表示不限制)
+# core_thread_count    : 核心线程数 (1)
+# max_thread_count     : 最大线程数 (8)
+# keep_alive_time      : 空闲线程的最大存活时间 (毫秒, 5000)
+# monitor_interval     : 监控线程检查间隔 (毫秒, 200)
+
+threadpool:
+  max_task_count: 1000
+  core_thread_count: 6
+  max_thread_count: 12
+  keep_alive_time: 6000
+  monitor_interval: 300

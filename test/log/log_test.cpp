@@ -188,8 +188,6 @@ TEST_F(LogTest, AsyncFileLogger)
   // 加载配置文件
   velox::config::Config::loadFromConfDir("test/log");
 
-  auto test2_logger = VELOX_GETLOG("test1");
-
   // 单线程
   {
     auto logger = VELOX_GETLOG("test1");

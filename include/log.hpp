@@ -1,6 +1,6 @@
 /**
  * @file log.hpp
- * @brief 日志模块封装
+ * @brief 日志模块
  * @author zhengyouzhi
  * @email youzhizheng9@gmail.com
  * @date 2025-7-1
@@ -66,7 +66,7 @@ namespace velox::log
   constexpr std::size_t DEFAULT_THREAD_NUM = 1;
 
   /**
-   * @brief 对 spdlog 进行初始化, 最终会创建一个默认异步构造器
+   * @brief 对 spdlog 进行初始化, 并创建和设置配置参数 logs
    * @param[in] queue_size 用于异步 logger 的队列大小
    * @param[in] n_threads 用于异步 logger 的线程数
    * @return 成功返回 true

@@ -96,8 +96,8 @@ namespace velox::config
    public:
     /**
      * @brief 类型转换
-     * @param[in] v 的源类型值
-     * @return v 转换后的目标类型
+     * @param[in] v 要转换的源类型值
+     * @return v转换后的目标类型值
      * @exception 当类型不可转换时抛出异常
      */
     T operator()(const F& v) { return boost::lexical_cast<T>(v); }
@@ -521,14 +521,14 @@ namespace velox::config
     using ConfigVarMap = std::unordered_map<std::string, ConfigVarBase::ptr>;
 
     /**
-     * @brief 获取 /创建对应参数名的配置参数
+     * @brief 获取/创建对应参数名的配置参数
      * @param[in] name 配置参数名称
      * @param[in] default_value 参数默认值
      * @param[in] description 参数描述
      * @details 获取参数名为name的配置参数,如果存在则直接返回
      *          如果不存在, 则根据参数创建对应的配置参数
      * @return 返回对应的配置参数指针, 如果参数名存在但是类型不匹配则返回 nullptr
-     * @exception 如果参数名包含非法字符[^0-9a-z_.] 抛出异常 std::invalid_argument
+     * @exception 如果参数名为空或包含非法字符[^0-9a-z_.] 抛出异常 std::invalid_argument
      */
     template<class T>
     static typename ConfigVar<T>::ptr

@@ -78,5 +78,5 @@ install: ## install the package to the INSTALL_LOCATION
 	cmake --build build --config Release
 	cmake --build build --target install --config Release
 
-build: ## Incrementally build the project after source changes
+update: ## Incrementally build the project after source changes
 	cmake --build build

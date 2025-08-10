@@ -13,7 +13,7 @@ project(
 # ---------------------------------------------------------------------------------------
 # Compilation Standards
 # ---------------------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "the C++ standard to use for this project")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

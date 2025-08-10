@@ -196,7 +196,7 @@ namespace velox::log
 
       // TODO: 添加自定义格式标识符, 用于打印协程ID fiberId(先实现协程库), 参考下面链接实现
       // https://github.com/gabime/spdlog/wiki/Custom-formatting#extending-spdlog-with-your-own-flags
-      logger->set_pattern("%^[%Y-%m-%d %T.%e][thread %t][%l][%n][%s:%#]: %v%$");
+      logger->set_pattern("%^[%T.%e][thread %t][%l][%n][%s:%#]: %v%$");
 
       // 设置刷新阈值, 当出发 warn 或更严重的错误时立刻刷新日志到  disk
       logger->flush_on(spdlog::level::warn);

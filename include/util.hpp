@@ -82,7 +82,7 @@ namespace velox::util
 
   /**
    * @brief 判断名字是否合法
-   * @details 组成名字的字符只能为 [0-9a-zA-Z_.]
+   * @details 组成名字的字符只能为 [0-9a-z_.]
    */
   bool isValidName(const std::string& name) noexcept;
 

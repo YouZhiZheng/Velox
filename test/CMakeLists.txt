@@ -72,7 +72,7 @@ foreach(file ${test_sources})
   endif()
 
   # Add yaml-cpp dependency to specific tests
-  if(${test_name} STREQUAL "config_test" OR ${test_name} STREQUAL "log_test")
+  if(${test_name} STREQUAL "config_test" OR ${test_name} STREQUAL "log_test" OR ${test_name} STREQUAL "threadpool_test")
     target_link_libraries(${test_name}_Tests PRIVATE yaml-cpp::yaml-cpp)
   endif()
 
